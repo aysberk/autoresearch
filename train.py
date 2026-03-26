@@ -695,7 +695,7 @@ WARMUP_RATIO = 0.0
 WARMDOWN_RATIO = 0.5
 FINAL_LR_FRAC = 0.0
 
-DEPTH = 6
+DEPTH = 4
 DEVICE_BATCH_SIZE = 4  # reduce to 2 if OOM
 
 # ---------------------------------------------------------------------------
