@@ -679,7 +679,7 @@ class MuonAdamW(torch.optim.Optimizer):
 # ---------------------------------------------------------------------------
 
 ASPECT_RATIO = 64
-HEAD_DIM = 64
+HEAD_DIM = 128
 WINDOW_PATTERN = "L"
 
 TOTAL_BATCH_SIZE = 2**16  # 64K tokens, daha sık güncelleme
