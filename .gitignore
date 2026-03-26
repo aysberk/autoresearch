@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.ruff_cache/
+
+# ZLUDA
+zluda/
+zluda_windows.zip
+
+# Data cache
+.cache/
+
+# Training logs
+run.log
+results.tsv
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+Thumbs.db
+Desktop.ini
