@@ -15,6 +15,7 @@ zluda_windows.zip
 # Training logs
 run.log
 results.tsv
+ralph_logs/
 
 # Jupyter
 .ipynb_checkpoints/
