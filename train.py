@@ -682,7 +682,7 @@ ASPECT_RATIO = 64
 HEAD_DIM = 128
 WINDOW_PATTERN = "L"
 
-TOTAL_BATCH_SIZE = 2**16  # 64K tokens, daha sık güncelleme
+TOTAL_BATCH_SIZE = 2**16
 EMBEDDING_LR = 0.6
 UNEMBEDDING_LR = 0.004
 MATRIX_LR = 0.08
@@ -690,11 +690,11 @@ SCALAR_LR = 0.5
 WEIGHT_DECAY = 0.2
 ADAM_BETAS = (0.8, 0.95)
 WARMUP_RATIO = 0.0
-WARMDOWN_RATIO = 0.5
+WARMDOWN_RATIO = 0.3
 FINAL_LR_FRAC = 0.0
 
-DEPTH = 6
-DEVICE_BATCH_SIZE = 4  # reduce to 2 if OOM
+DEPTH = 5
+DEVICE_BATCH_SIZE = 4
 
 # ---------------------------------------------------------------------------
 # Setup
