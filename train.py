@@ -679,7 +679,7 @@ class MuonAdamW(torch.optim.Optimizer):
 # ---------------------------------------------------------------------------
 
 ASPECT_RATIO = 64
-HEAD_DIM = 128
+HEAD_DIM = 64
 WINDOW_PATTERN = "L"
 
 TOTAL_BATCH_SIZE = 2**16
@@ -690,7 +690,7 @@ SCALAR_LR = 0.5
 WEIGHT_DECAY = 0.2
 ADAM_BETAS = (0.8, 0.95)
 WARMUP_RATIO = 0.0
-WARMDOWN_RATIO = 0.7
+WARMDOWN_RATIO = 0.5
 FINAL_LR_FRAC = 0.0
 
 DEPTH = 5
