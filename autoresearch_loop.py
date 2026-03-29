@@ -366,7 +366,7 @@ Hangi de?i?ikli?i ?nerirsin? Sadece JSON d?nd?r."""
                 "max_tokens": 200,
                 "temperature": 0.7,
             },
-            timeout=120,
+            timeout=300,  # TurboQuant CPU inference icin uzun timeout
         )
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"].strip()
@@ -509,18 +509,15 @@ def check_llm_server(url, key, name, timeout=30):
         return False
 
 
-def run_llm_mode(max_experiments=20, dry_run=False):
+def run_llm_mode(max_experiments=20, dry_run=False, force_turboquant=False):
     """LLM karari + Python mekanik isler."""
     log("LLM modu baslatiliyor...", C.CYAN)
 
     global LM_STUDIO_URL, LM_STUDIO_MODEL, LM_STUDIO_KEY
 
-    # 1. LM Studio dene
-    lm_ok = check_llm_server(LM_STUDIO_URL, LM_STUDIO_KEY, "LM Studio")
-
-    # 2. LM Studio calismiyorsa TurboQuant dene
-    if not lm_ok:
-        log("LM Studio bulunamadi, TurboQuant deneniyor...", C.YELLOW)
+    if force_turboquant:
+        # --use-turboquant: LM Studio'yu atla, direkt TurboQuant
+        log("TurboQuant zorla aktif, LM Studio atlanıyor...", C.CYAN)
         tq_ok = check_llm_server(
             TURBOQUANT_URL, "lmstudio", "TurboQuant Server", timeout=60
         )
@@ -528,11 +525,28 @@ def run_llm_mode(max_experiments=20, dry_run=False):
             LM_STUDIO_URL = TURBOQUANT_URL
             LM_STUDIO_MODEL = TURBOQUANT_MODEL
             LM_STUDIO_KEY = "lmstudio"
-            log(f"TurboQuant moduna gecildi: {LM_STUDIO_MODEL}", C.GREEN)
+            log(f"TurboQuant modu: {LM_STUDIO_MODEL}", C.GREEN)
         else:
-            log("TurboQuant de calismiyor, grid moduna geciliyor...", C.YELLOW)
+            log("TurboQuant calismiyor, grid moduna geciliyor...", C.YELLOW)
             run_grid_mode(max_experiments, dry_run)
             return
+    else:
+        # Normal: once LM Studio, sonra TurboQuant, sonra Grid
+        lm_ok = check_llm_server(LM_STUDIO_URL, LM_STUDIO_KEY, "LM Studio")
+        if not lm_ok:
+            log("LM Studio bulunamadi, TurboQuant deneniyor...", C.YELLOW)
+            tq_ok = check_llm_server(
+                TURBOQUANT_URL, "lmstudio", "TurboQuant Server", timeout=60
+            )
+            if tq_ok:
+                LM_STUDIO_URL = TURBOQUANT_URL
+                LM_STUDIO_MODEL = TURBOQUANT_MODEL
+                LM_STUDIO_KEY = "lmstudio"
+                log(f"TurboQuant moduna gecildi: {LM_STUDIO_MODEL}", C.GREEN)
+            else:
+                log("TurboQuant de calismiyor, grid moduna geciliyor...", C.YELLOW)
+                run_grid_mode(max_experiments, dry_run)
+                return
 
     consecutive_fail = 0
     for i in range(1, max_experiments + 1):
@@ -648,7 +662,7 @@ if __name__ == "__main__":
 
     try:
         if args.mode == "llm":
-            run_llm_mode(args.max, args.dry_run)
+            run_llm_mode(args.max, args.dry_run, force_turboquant=args.use_turboquant)
         else:
             run_grid_mode(args.max, args.dry_run)
     except KeyboardInterrupt:
