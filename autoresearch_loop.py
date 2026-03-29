@@ -27,7 +27,8 @@ RUN_LOG = PROJECT_DIR / "run.log"
 RESULTS_TSV = PROJECT_DIR / "results.tsv"
 
 LM_STUDIO_URL = "http://localhost:1234/v1/chat/completions"
-LM_STUDIO_MODEL = "liquid/lfm2-24b-a2b"  # LM Studio'da y?kl? modeli yaz
+TURBOQUANT_URL = "http://localhost:8000/v1/chat/completions"
+LM_STUDIO_MODEL = "liquid/lfm2-24b-a2b"  # LM Studio'da yuklu modeli yaz
 LM_STUDIO_KEY = "lmstudio"
 
 # ?u anki en iyi konfig?rasyon (baseline)
@@ -597,15 +598,27 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Ger?ek e?itim ?al??t?rma, sadece plan g?ster",
+        help="Gercek egitim calistirma, sadece plan goster",
+    )
+    parser.add_argument(
+        "--use-turboquant",
+        action="store_true",
+        help="LLM modunda turboquant-server kullan (VRAM dusuk, daha az coker)",
     )
     args = parser.parse_args()
+
+    # TurboQuant secilirse URL'yi degistir
+    if args.use_turboquant:
+        LM_STUDIO_URL = TURBOQUANT_URL
+        print(f"  TurboQuant modu aktif: {LM_STUDIO_URL}")
 
     os.chdir(PROJECT_DIR)
     init_results_tsv()
 
-    print(f"\n{C.CYAN}{C.BOLD}AUTORESEARCH ? Otonom D?ng?{C.RESET}")
+    print(f"\n{C.CYAN}{C.BOLD}AUTORESEARCH - Otonom Dongu{C.RESET}")
     print(f"Mod: {args.mode} | Max deney: {args.max} | Dry run: {args.dry_run}")
+    if args.use_turboquant:
+        print(f"TurboQuant: AKTIF (VRAM dusuk mod)")
     print(f"En iyi val_bpb: {get_best_val_bpb():.6f}")
     print()
 
