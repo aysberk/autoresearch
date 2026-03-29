@@ -26,10 +26,11 @@ TRAIN_PY = PROJECT_DIR / "train.py"
 RUN_LOG = PROJECT_DIR / "run.log"
 RESULTS_TSV = PROJECT_DIR / "results.tsv"
 
-LM_STUDIO_URL = "http://localhost:1234/v1/chat/completions"
+LM_STUDIO_URL = "http://192.168.0.14:1234/v1/chat/completions"
 TURBOQUANT_URL = "http://localhost:8000/v1/chat/completions"
 LM_STUDIO_MODEL = "liquid/lfm2-24b-a2b"  # LM Studio'da yuklu modeli yaz
-LM_STUDIO_KEY = "lmstudio"
+LM_STUDIO_KEY = "sk-lm-XsWaszis:FzPIhzMTuhP8GX6W5ktE"
+TURBOQUANT_MODEL = "Qwen/Qwen2.5-3B-Instruct"  # HuggingFace model (fallback)
 
 # ?u anki en iyi konfig?rasyon (baseline)
 CURRENT_BEST_CONFIG = {
@@ -493,24 +494,43 @@ def run_grid_mode(max_experiments=None, dry_run=False):
 
 
 # --- LLM modu --------------------------------------------------------------
-def run_llm_mode(max_experiments=20, dry_run=False):
-    """LLM karar? + Python mekanik i?ler."""
-    log("LLM modu ba?lat?l?yor...", C.CYAN)
-
-    # LM Studio ba?lant?s?n? test et
+def check_llm_server(url, key, name, timeout=5):
+    """Bir LLM sunucusunun calisip calismadigini kontrol et."""
     try:
         resp = requests.get(
-            "http://localhost:1234/v1/models",
-            headers={"Authorization": f"Bearer {LM_STUDIO_KEY}"},
-            timeout=5,
+            url.replace("/v1/chat/completions", "/v1/models"),
+            headers={"Authorization": f"Bearer {key}"},
+            timeout=timeout,
         )
         models = [m["id"] for m in resp.json().get("data", [])]
-        log(f"LM Studio ba?lant?s? OK. Modeller: {models}", C.GREEN)
-    except Exception as e:
-        log(f"LM Studio ba?lanamad?: {e}", C.RED)
-        log("Grid moduna ge?iliyor...", C.YELLOW)
-        run_grid_mode(max_experiments, dry_run)
-        return
+        log(f"{name} baglantisi OK. Modeller: {len(models)} adet", C.GREEN)
+        return True
+    except Exception:
+        return False
+
+
+def run_llm_mode(max_experiments=20, dry_run=False):
+    """LLM karari + Python mekanik isler."""
+    log("LLM modu baslatiliyor...", C.CYAN)
+
+    global LM_STUDIO_URL, LM_STUDIO_MODEL, LM_STUDIO_KEY
+
+    # 1. LM Studio dene
+    lm_ok = check_llm_server(LM_STUDIO_URL, LM_STUDIO_KEY, "LM Studio")
+
+    # 2. LM Studio calismiyorsa TurboQuant dene
+    if not lm_ok:
+        log("LM Studio bulunamadi, TurboQuant deneniyor...", C.YELLOW)
+        tq_ok = check_llm_server(TURBOQUANT_URL, "lmstudio", "TurboQuant Server")
+        if tq_ok:
+            LM_STUDIO_URL = TURBOQUANT_URL
+            LM_STUDIO_MODEL = TURBOQUANT_MODEL
+            LM_STUDIO_KEY = "lmstudio"
+            log(f"TurboQuant moduna gecildi: {LM_STUDIO_MODEL}", C.GREEN)
+        else:
+            log("TurboQuant de calismiyor, grid moduna geciliyor...", C.YELLOW)
+            run_grid_mode(max_experiments, dry_run)
+            return
 
     consecutive_fail = 0
     for i in range(1, max_experiments + 1):
@@ -603,14 +623,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--use-turboquant",
         action="store_true",
-        help="LLM modunda turboquant-server kullan (VRAM dusuk, daha az coker)",
+        help="LM Studio'yu atla, direkt TurboQuant kullan (HuggingFace'den yukler)",
     )
     args = parser.parse_args()
 
-    # TurboQuant secilirse URL'yi degistir
+    # --use-turboquant ile dogrudan TurboQuant kullan
     if args.use_turboquant:
         LM_STUDIO_URL = TURBOQUANT_URL
-        print(f"  TurboQuant modu aktif: {LM_STUDIO_URL}")
+        LM_STUDIO_MODEL = TURBOQUANT_MODEL
+        LM_STUDIO_KEY = "lmstudio"
+        print(f"  TurboQuant modu (zorla): {LM_STUDIO_URL}")
 
     os.chdir(PROJECT_DIR)
     init_results_tsv()
