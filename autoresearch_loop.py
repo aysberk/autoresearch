@@ -519,7 +519,7 @@ def run_llm_mode(max_experiments=20, dry_run=False, force_turboquant=False):
         # --use-turboquant: LM Studio'yu atla, direkt TurboQuant
         log("TurboQuant zorla aktif, LM Studio atlanıyor...", C.CYAN)
         tq_ok = check_llm_server(
-            TURBOQUANT_URL, "lmstudio", "TurboQuant Server", timeout=60
+            TURBOQUANT_URL, "lmstudio", "TurboQuant Server", timeout=120
         )
         if tq_ok:
             LM_STUDIO_URL = TURBOQUANT_URL
@@ -536,7 +536,7 @@ def run_llm_mode(max_experiments=20, dry_run=False, force_turboquant=False):
         if not lm_ok:
             log("LM Studio bulunamadi, TurboQuant deneniyor...", C.YELLOW)
             tq_ok = check_llm_server(
-                TURBOQUANT_URL, "lmstudio", "TurboQuant Server", timeout=60
+                TURBOQUANT_URL, "lmstudio", "TurboQuant Server", timeout=120
             )
             if tq_ok:
                 LM_STUDIO_URL = TURBOQUANT_URL
