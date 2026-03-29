@@ -682,7 +682,7 @@ ASPECT_RATIO = 64
 HEAD_DIM = 64
 WINDOW_PATTERN = "L"
 
-TOTAL_BATCH_SIZE = 2**15
+TOTAL_BATCH_SIZE = 2**16  # 64K tokens
 EMBEDDING_LR = 0.6
 UNEMBEDDING_LR = 0.004
 MATRIX_LR = 0.08
@@ -694,7 +694,7 @@ WARMDOWN_RATIO = 0.3
 FINAL_LR_FRAC = 0.0
 
 DEPTH = 5
-DEVICE_BATCH_SIZE = 2
+DEVICE_BATCH_SIZE = 4
 
 # ---------------------------------------------------------------------------
 # Setup
