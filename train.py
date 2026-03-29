@@ -694,7 +694,7 @@ WARMDOWN_RATIO = 0.3
 FINAL_LR_FRAC = 0.0
 
 DEPTH = 5
-DEVICE_BATCH_SIZE = 4
+DEVICE_BATCH_SIZE = 2
 
 # ---------------------------------------------------------------------------
 # Setup
