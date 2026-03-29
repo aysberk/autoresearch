@@ -99,6 +99,7 @@ class C:
     RED = "\033[91m"
     CYAN = "\033[96m"
     GRAY = "\033[90m"
+    WHITE = "[97m"
     RESET = "\033[0m"
     BOLD = "\033[1m"
 
