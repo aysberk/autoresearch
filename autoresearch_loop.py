@@ -361,37 +361,56 @@ Hangi de?i?ikli?i ?nerirsin? Sadece JSON d?nd?r."""
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
                 ],
-                "max_tokens": 200,
+                "max_tokens": 500,
                 "temperature": 0.7,
             },
             timeout=300,  # TurboQuant CPU inference icin uzun timeout
         )
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"].strip()
+        log(f"LLM ham cevap: {content[:200]}", C.GRAY)
 
         # JSON parse et — LLM bazen birden fazla JSON objekti dondurur
         content = re.sub(r"```json\s*", "", content)
         content = re.sub(r"```\s*", "", content)
-        # Her satiri tek tek dene, ilk gecerli JSON'u kullan
+
+        # Ilk gecerli {param, value, reason} JSON objesini bul
+        # LLM bazen bitisik JSON objeleri dondurur: {"param":"A"},{"param":"B"}
+        # veya kesik dondurur: {"param":"A","value":1},{"param":"B"...
         for line in content.strip().splitlines():
-            line = line.strip()
+            line = line.strip().rstrip(",")
             if not line:
                 continue
-            m = re.search(r"\{[^}]+\}", line)
-            if m:
-                try:
-                    data = json.loads(m.group(0))
-                    if "param" in data and "value" in data:
-                        return data
-                except json.JSONDecodeError:
-                    continue
-        # Tum satirlar basarisizsa, ilk JSON'u al
-        m = re.search(r"\{[^}]+\}", content)
-        if m:
+            # Her satirdan ilk {..} blokunu cikar
+            brace_count = 0
+            start = -1
+            for i, ch in enumerate(line):
+                if ch == "{":
+                    if brace_count == 0:
+                        start = i
+                    brace_count += 1
+                elif ch == "}":
+                    brace_count -= 1
+                    if brace_count == 0 and start >= 0:
+                        candidate = line[start : i + 1]
+                        try:
+                            data = json.loads(candidate)
+                            if "param" in data and "value" in data:
+                                return data
+                        except json.JSONDecodeError:
+                            pass
+                        start = -1
+
+        # Tek satirda birden fazla JSON varsa, hepsini bul
+        all_jsons = re.findall(r'\{"param"[^}]+\}', content)
+        for j in all_jsons:
+            j = j.rstrip(",")
             try:
-                return json.loads(m.group(0))
+                data = json.loads(j)
+                if "param" in data and "value" in data:
+                    return data
             except json.JSONDecodeError:
-                pass
+                continue
     except Exception as e:
         log(f"LLM hatas?: {e}", C.RED)
     return None
