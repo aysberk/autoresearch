@@ -494,7 +494,7 @@ def run_grid_mode(max_experiments=None, dry_run=False):
 
 
 # --- LLM modu --------------------------------------------------------------
-def check_llm_server(url, key, name, timeout=5):
+def check_llm_server(url, key, name, timeout=30):
     """Bir LLM sunucusunun calisip calismadigini kontrol et."""
     try:
         resp = requests.get(
@@ -521,7 +521,9 @@ def run_llm_mode(max_experiments=20, dry_run=False):
     # 2. LM Studio calismiyorsa TurboQuant dene
     if not lm_ok:
         log("LM Studio bulunamadi, TurboQuant deneniyor...", C.YELLOW)
-        tq_ok = check_llm_server(TURBOQUANT_URL, "lmstudio", "TurboQuant Server")
+        tq_ok = check_llm_server(
+            TURBOQUANT_URL, "lmstudio", "TurboQuant Server", timeout=60
+        )
         if tq_ok:
             LM_STUDIO_URL = TURBOQUANT_URL
             LM_STUDIO_MODEL = TURBOQUANT_MODEL
