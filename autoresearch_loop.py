@@ -126,18 +126,16 @@ def apply_changes(changes: dict) -> bool:
     original = content
 
     for param, value in changes.items():
-        # De?eri Python string'e ?evir
-        if (
-            isinstance(value, str)
-            and not value.startswith('"')
-            and not value.startswith("(")
-            and not value.startswith("2**")
-        ):
+        # Sayisal string'leri sayiya cevir (LLM bazen string dondurur)
+        if isinstance(value, str):
+            try:
+                value = float(value)
+            except ValueError:
+                pass
+
+        # Degeri Python string'e cevir
+        if isinstance(value, str) and not value.startswith(('"', "(", "2**")):
             val_str = f'"{value}"'
-        elif isinstance(value, float):
-            val_str = str(value)
-        elif isinstance(value, int):
-            val_str = str(value)
         else:
             val_str = str(value)
 
