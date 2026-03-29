@@ -371,13 +371,29 @@ Hangi de?i?ikli?i ?nerirsin? Sadece JSON d?nd?r."""
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"].strip()
 
-        # JSON parse et ? LLM bazen ```json ... ``` ile sarar
+        # JSON parse et — LLM bazen birden fazla JSON objekti dondurur
         content = re.sub(r"```json\s*", "", content)
         content = re.sub(r"```\s*", "", content)
-        m = re.search(r"\{.*\}", content, re.DOTALL)
+        # Her satiri tek tek dene, ilk gecerli JSON'u kullan
+        for line in content.strip().splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            m = re.search(r"\{[^}]+\}", line)
+            if m:
+                try:
+                    data = json.loads(m.group(0))
+                    if "param" in data and "value" in data:
+                        return data
+                except json.JSONDecodeError:
+                    continue
+        # Tum satirlar basarisizsa, ilk JSON'u al
+        m = re.search(r"\{[^}]+\}", content)
         if m:
-            data = json.loads(m.group(0))
-            return data
+            try:
+                return json.loads(m.group(0))
+            except json.JSONDecodeError:
+                pass
     except Exception as e:
         log(f"LLM hatas?: {e}", C.RED)
     return None
